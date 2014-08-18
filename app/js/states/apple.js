@@ -22,7 +22,7 @@ define([
 
         $stateProvider            
             .state('app.apple', {
-                url: '/lazy',
+                url: '/apple',
                 templateUrl: 'views/apple/base.html',
                 controller: 'Apple.BaseCtrl'                
             });        

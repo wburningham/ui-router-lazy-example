@@ -2,7 +2,7 @@ define([
 
     'angular',    
     'angularUiRouter',
-    'angularUiExtras',
+    'uiRouterExtras',
     'uiRouterExtrasStatevis',
     'ocLazyLoad',
     'core/module',
@@ -56,23 +56,28 @@ define([
                $futureStateProvider.stateFactory('ocLazyLoad', ocLazyLoadStateFactory);
 
                $futureStateProvider.addResolve(function () {
-                   if(SettingsServiceProvider.fruit() === 'oranges') {
+                   /**
+                    * NOTE: resolves can be used for determining
+                    * which future states you actually want.
+                    * Here, we register both apples and oranges
+                    */
+                   //if(SettingsServiceProvider.fruit() === 'oranges') {
                      $futureStateProvider.futureState({
                          'stateName': 'app.orange',
-                         'urlPrefix': '/lazy',
+                         'urlPrefix': '/orange',
                          'type': 'ocLazyLoad',
                          'module': 'futureStates.states.orange'
                      });
 
-                   } else if (SettingsServiceProvider.fruit() === 'apples') {
+                   //} else if (SettingsServiceProvider.fruit() === 'apples') {
                        $futureStateProvider.futureState({
                            'stateName': 'app.apple',
-                           'urlPrefix': '/lazy',
+                           'urlPrefix': '/apple',
                            'type': 'ocLazyLoad',
                            'module': 'futureStates.states.apple'
                        });
 
-                   }                                        
+                   //}
                });
            }]);
 });

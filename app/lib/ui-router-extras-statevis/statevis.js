@@ -1,5 +1,8 @@
 // statevis requires d3 and either lodash or underscorejs.
-(function () {
+define([
+    'd3',
+    'lodash'
+], function(d3) {
   "use strict";
   var app = angular.module("ct.ui.router.extras.examples.statevis", ['ct.ui.router.extras']);
   angular.module("ct.ui.router.extras.examples.statevis").directive('stateVis',
@@ -216,5 +219,4 @@
             }
           };
         }]);
-})();
-
+});
