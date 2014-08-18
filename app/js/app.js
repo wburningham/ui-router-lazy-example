@@ -3,6 +3,7 @@ define([
     'angular',    
     'angularUiRouter',
     'angularUiExtras',
+    'uiRouterExtrasStatevis',
     'ocLazyLoad',
     'core/module',
     'core/services/settings',
@@ -14,7 +15,8 @@ define([
    return angular.module('futureStates',
         [
             'ui.router',
-            'ct.ui.router.extras',         
+            'ct.ui.router.extras',
+            'ct.ui.router.extras.examples.statevis',
             'oc.lazyLoad',
             'futureStates.core',
             'futureStates.states.core'
