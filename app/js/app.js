@@ -55,29 +55,37 @@ define([
 
                $futureStateProvider.stateFactory('ocLazyLoad', ocLazyLoadStateFactory);
 
-               $futureStateProvider.addResolve(function () {
+               $futureStateProvider.addResolve(function ($injector) {
                    /**
                     * NOTE: resolves can be used for determining
                     * which future states you actually want.
-                    * Here, we register both apples and oranges
+                    * Here, we register both apples and oranges.
+                    * Try uncommenting the if/else to see
+                    * the magic of provider injected logic
+                    *
+                    * Important thing to remember: in addResolve, you have
+                    * to "return" the thenable promise chain if you want it
+                    * to actually wait on your provider's resolution.
                     */
-                   //if(SettingsServiceProvider.fruit() === 'oranges') {
-                     $futureStateProvider.futureState({
-                         'stateName': 'app.orange',
-                         'urlPrefix': '/orange',
-                         'type': 'ocLazyLoad',
-                         'module': 'futureStates.states.orange'
-                     });
-
-                   //} else if (SettingsServiceProvider.fruit() === 'apples') {
-                       $futureStateProvider.futureState({
-                           'stateName': 'app.apple',
-                           'urlPrefix': '/apple',
-                           'type': 'ocLazyLoad',
-                           'module': 'futureStates.states.apple'
-                       });
-
-                   //}
+                   return $injector.invoke(SettingsServiceProvider.fruit).then(
+                       function (fruitResult) {
+                           //if (fruitResult === 'oranges') {
+                               $futureStateProvider.futureState({
+                                   'stateName': 'app.orange',
+                                   'urlPrefix': '/orange',
+                                   'type': 'ocLazyLoad',
+                                   'module': 'futureStates.states.orange'
+                               });
+                           //} else if (fruitResult === 'apples') {
+                               $futureStateProvider.futureState({
+                                   'stateName': 'app.apple',
+                                   'urlPrefix': '/apple',
+                                   'type': 'ocLazyLoad',
+                                   'module': 'futureStates.states.apple'
+                               });
+                           //}
+                       }
+                   );
                });
            }]);
 });

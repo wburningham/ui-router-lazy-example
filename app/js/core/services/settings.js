@@ -15,9 +15,11 @@ define([
                 return this;
             },            
 
-            fruit: function () {
-                return applesOrOranges;
-            }
+            fruit: ['$q', function ($q) {
+                var deferred = $q.defer();
+                deferred.resolve(applesOrOranges);
+                return deferred.promise;
+            }]
         };
     });
 });
