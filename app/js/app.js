@@ -33,9 +33,11 @@ define([
                    jsLoader: requirejs,
                    loadedModules: ['futureStates'],
                    modules: [{
+                       reconfig: true,
                        name: 'futureStates.states.orange',
                        files: ['states/orange']
                    }, {
+                       reconfig: true,
                        name: 'futureStates.states.apple',
                        files: ['states/apple']
                    }]
