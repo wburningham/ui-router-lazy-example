@@ -19,7 +19,7 @@ require.config({
         lodash: '../lib/lodash/dist/lodash.min',
         ocLazyLoad: '../lib/ocLazyLoad/dist/ocLazyLoad.min',
         uiRouterExtras: '../lib/ui-router-extras/release/ct-ui-router-extras',
-        uiRouterExtrasStatevis: '../lib/ui-router-extras-statevis/statevis'
+        uiRouterExtrasStatevis: './ui-router-extras-statevis'
     },
 
     shim: {
