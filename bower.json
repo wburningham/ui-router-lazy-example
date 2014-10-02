@@ -18,6 +18,8 @@
     "angular-resource": "~1.2.25",
     "angular-sanitize": "~1.2.25",
     "angular-ui-router": "~0.2.11",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "d3": "~3.4.11",
+    "jquery": "~2.1.1"
   }
 }

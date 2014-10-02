@@ -15,7 +15,7 @@ require.config({
         angularUiRouter: '../lib/angular-ui-router/release/angular-ui-router',
         d3: '../lib/d3/d3',
         async: '../lib/requirejs-plugins/src/async',        
-        jquery: '../lib/jquery/jquery.min',
+        jquery: '../lib/jquery/dist/jquery.min',
         lodash: '../lib/lodash/dist/lodash.min',
         ocLazyLoad: '../lib/ocLazyLoad/ocLazyLoad.min',
         uiRouterExtras: '../lib/ui-router-extras/ct-ui-router-extras',
