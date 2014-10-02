@@ -1,6 +1,6 @@
 /**
- * ocLazyLoad - Load modules on demand (lazy load) with angularJS
- * @version v0.3.4
+ * oclazyload - Load modules on demand (lazy load) with angularJS
+ * @version v0.3.8
  * @link https://github.com/ocombe/ocLazyLoad
  * @license MIT
  * @author Olivier Combe <olivier.combe@gmail.com>
@@ -10,6 +10,7 @@
 	var regModules = ['ng'],
 		regInvokes = [],
 		regConfigs = [],
+		justLoaded = [],
 		ocLazyLoad = angular.module('oc.lazyLoad', ['ng']),
 		broadcast = angular.noop;
 
@@ -78,6 +79,13 @@
 							}
 						};
 
+                    // Store the promise early so the file load can be detected by other parallel lazy loads
+                    // (ie: multiple routes on one page) a 'true' value isn't sufficient
+                    // as it causes false positive load results.
+                    if(angular.isUndefined(filesCache.get(path))) {
+                        filesCache.put(path, deferred.promise);
+                    }
+
 					// Switch in case more content types are added later
 					switch(type) {
 						case 'css':
@@ -98,9 +106,6 @@
 						if((el['readyState'] && !(/^c|loade/.test(el['readyState']))) || loaded) return;
 						el.onload = el['onreadystatechange'] = null
 						loaded = 1;
-						if(angular.isUndefined(filesCache.get(path))) {
-							filesCache.put(path, true);
-						}
 						broadcast('ocLazyLoad.fileLoaded', path);
 						deferred.resolve();
 					}
@@ -205,12 +210,14 @@
 					var cssFiles = [],
 						templatesFiles = [],
 						jsFiles = [],
-						promises = [];
+						promises = [],
+                        cachePromise = null;
 
 					angular.extend(params || {}, config);
 
 					angular.forEach(params.files, function(path) {
-						if(angular.isUndefined(filesCache.get(path)) || params.cache === false) {
+                        cachePromise = filesCache.get(path);
+						if(angular.isUndefined(cachePromise) || params.cache === false) {
 							if(/\.css[^\.]*$/.test(path) && cssFiles.indexOf(path) === -1) {
 								cssFiles.push(path);
 							} else if(/\.(htm|html)[^\.]*$/.test(path) && templatesFiles.indexOf(path) === -1) {
@@ -218,7 +225,9 @@
 							} else if (jsFiles.indexOf(path) === -1) {
 								jsFiles.push(path);
 							}
-						}
+						} else if (cachePromise) {
+                            promises.push(cachePromise);
+                        }
 					});
 
 					if(cssFiles.length > 0) {
@@ -308,9 +317,11 @@
 							});
 
 							// Resolve the promise once everything has loaded
-							$q.all(deferredList).then(function() {
+							$q.all(deferredList).then(function success() {
 								deferred.resolve(module);
-							});
+							}, function error(err) {
+                                deferred.reject(err);
+                            });
 
 							return deferred.promise;
 						}
@@ -399,21 +410,23 @@
 									requireEntry = config;
 								}
 
-								// Check if this dependency has been loaded previously or is already in the moduleCache
-								if(moduleExists(requireEntry.name) || moduleCache.indexOf(requireEntry.name) !== -1) {
+								// Check if this dependency has been loaded previously
+								if(moduleExists(requireEntry.name)) {
 									if(typeof module !== 'string') {
                                         // compare against the already loaded module to see if the new definition adds any new files
                                         diff = requireEntry.files.filter(function (n) {
-                                            return self.getModuleConfig(requireEntry.name).files.indexOf(n) < 0
+                                            return self.getModuleConfig(requireEntry.name).files.indexOf(n) < 0;
                                         });
+
+                                        // If the module was redefined, advise via the console
                                         if (diff.length !== 0) {
                                             $log.warn('Module "', moduleName, '" attempted to redefine configuration for dependency. "', requireEntry.name, '"\n Additional Files Loaded:', diff);
-	                                        var c = angular.copy(requireEntry);
-	                                        c.files = diff;
-                                            promisesList.push(filesLoader(c, params).then(function () {
-                                                return loadDependencies(requireEntry);
-                                            }));
                                         }
+
+                                        // Push everything to the file loader, it will weed out the duplicates.
+                                        promisesList.push(filesLoader(requireEntry.files, params).then(function () {
+                                            return loadDependencies(requireEntry);
+                                        }));
                                     }
 									return;
 								} else if(typeof requireEntry === 'object') {
@@ -437,7 +450,7 @@
 								if(requireEntry.hasOwnProperty('files') && requireEntry.files.length !== 0) {
 									if(requireEntry.files) {
 										promisesList.push(filesLoader(requireEntry, params).then(function() {
-											return loadDependencies(requireEntry)
+											return loadDependencies(requireEntry);
 										}));
 									}
 								}
@@ -454,6 +467,7 @@
 								moduleCache.push(moduleName);
 								loadDependencies(moduleName).then(function success() {
 									try {
+										justLoaded = [];
 										register(providers, moduleCache, params);
 									} catch(e) {
 										$log.error(e.message);
@@ -649,17 +663,39 @@
 		for(i = 0, len = queue.length; i < len; i++) {
 			args = queue[i];
 			if(angular.isArray(args)) {
-				if(providers.hasOwnProperty(args[0])) {
-					provider = providers[args[0]];
-				} else {
-					throw new Error('unsupported provider ' + args[0]);
-				}
-				var invoked = regConfigs.indexOf(moduleName);
-				if(registerInvokeList(args[2][0]) && (args[1] !== 'invoke' || (args[1] === 'invoke' && invoked === -1)) || (args[1] === 'invoke' && reconfig)) {
-					if(invoked === -1) {
-						regConfigs.push(moduleName);
+				if(providers !== null) {
+					if(providers.hasOwnProperty(args[0])) {
+						provider = providers[args[0]];
+					} else {
+						throw new Error('unsupported provider ' + args[0]);
 					}
-					provider[args[1]].apply(provider, args[2]);
+				}
+				var isNew = registerInvokeList(args[2][0]);
+				if(args[1] !== 'invoke') {
+					if(isNew && angular.isDefined(provider)) {
+						provider[args[1]].apply(provider, args[2]);
+					}
+				} else { // config block
+					var callInvoke = function(fct) {
+						var invoked = regConfigs.indexOf(moduleName+'-'+fct);
+						if(invoked === -1 || reconfig) {
+							if(invoked === -1) {
+								regConfigs.push(moduleName+'-'+fct);
+							}
+							if(angular.isDefined(provider)) {
+								provider[args[1]].apply(provider, args[2]);
+							}
+						}
+					}
+					if(angular.isFunction(args[2][0])) {
+						callInvoke(args[2][0]);
+					} else if(angular.isArray(args[2][0])) {
+						for(var j = 0, jlen = args[2][0].length; j < jlen; j++) {
+							if(angular.isFunction(args[2][0][j])) {
+								callInvoke(args[2][0][j]);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -679,19 +715,21 @@
 				if(typeof moduleName !== 'string') {
 					moduleName = getModuleName(moduleName);
 				}
-				if(!moduleName) {
+				if(!moduleName || justLoaded.indexOf(moduleName) !== -1) {
 					continue;
 				}
+				var newModule = regModules.indexOf(moduleName) === -1;
 				moduleFn = angular.module(moduleName);
-				if(regModules.indexOf(moduleName) === -1) { // new module
+				if(newModule) { // new module
 					regModules.push(moduleName);
 					register(providers, moduleFn.requires, params);
 					runBlocks = runBlocks.concat(moduleFn._runBlocks);
 				}
 				invokeQueue(providers, moduleFn._invokeQueue, moduleName, params.reconfig);
 				invokeQueue(providers, moduleFn._configBlocks, moduleName, params.reconfig); // angular 1.3+
-				broadcast('ocLazyLoad.moduleLoaded', moduleName);
+				broadcast(newModule ? 'ocLazyLoad.moduleLoaded' : 'ocLazyLoad.moduleReloaded', moduleName);
 				registerModules.pop();
+				justLoaded.push(moduleName);
 			}
 			var instanceInjector = providers.getInstanceInjector();
 			angular.forEach(runBlocks, function(fn) {
@@ -707,17 +745,19 @@
 	 */
 	function registerInvokeList(invokeList) {
 		var newInvoke = false;
+		var onInvoke = function(invokeName) {
+			newInvoke = true;
+			regInvokes.push(invokeName);
+			broadcast('ocLazyLoad.componentLoaded', invokeName);
+		}
 		if(angular.isString(invokeList)) {
 			if(regInvokes.indexOf(invokeList) === -1) {
-				newInvoke = true;
-				regInvokes.push(invokeList);
-				broadcast('ocLazyLoad.componentLoaded', invokeList);
+				onInvoke(invokeList);
 			}
 		} else if(angular.isObject(invokeList)) {
 			angular.forEach(invokeList, function(invoke) {
 				if(angular.isString(invoke) && regInvokes.indexOf(invoke) === -1) {
-					newInvoke = true;
-					regInvokes.push(invoke);
+					onInvoke(invoke);
 				}
 			});
 		} else {
@@ -746,7 +786,7 @@
 	function init(element) {
 		var elements = [element],
 			appElement,
-			module,
+			moduleName,
 			names = ['ng:app', 'ng-app', 'x-ng-app', 'data-ng-app'],
 			NG_APP_CLASS_REGEXP = /\sng[:\-]app(:\s*([\w\d_]+);?)?\s/;
 
@@ -772,12 +812,12 @@
 				var match = NG_APP_CLASS_REGEXP.exec(className);
 				if(match) {
 					appElement = elm;
-					module = (match[2] || '').replace(/\s+/g, ',');
+					moduleName = (match[2] || '').replace(/\s+/g, ',');
 				} else {
 					angular.forEach(elm.attributes, function(attr) {
 						if(!appElement && names[attr.name]) {
 							appElement = elm;
-							module = attr.value;
+							moduleName = attr.value;
 						}
 					});
 				}
@@ -785,37 +825,19 @@
 		});
 
 		if(appElement) {
-			(function addReg(module) {
-				if(regModules.indexOf(module) === -1) {
+			(function addReg(moduleName) {
+				if(regModules.indexOf(moduleName) === -1) {
 					// register existing modules
-					regModules.push(module);
-					var mainModule = angular.module(module);
+					regModules.push(moduleName);
+					var mainModule = angular.module(moduleName);
 
 					// register existing components (directives, services, ...)
-					var queue = mainModule._invokeQueue,
-						i, len, args;
-					for(i = 0, len = queue.length; i < len; i++) {
-						args = queue[i];
-						if(angular.isArray(args)) {
-							registerInvokeList(args[2][0]);
-						}
-					}
-
-					// register config blocks (angular 1.3+)
-					if(angular.isDefined(mainModule._configBlocks)) {
-						var queue = mainModule._configBlocks,
-							i, len, args;
-						for(i = 0, len = queue.length; i < len; i++) {
-							args = queue[i];
-							if(angular.isArray(args)) {
-								registerInvokeList(args[2][0]);
-							}
-						}
-					}
+					invokeQueue(null, mainModule._invokeQueue, moduleName);
+					invokeQueue(null, mainModule._configBlocks, moduleName); // angular 1.3+
 
 					angular.forEach(mainModule.requires, addReg);
 				}
-			})(module);
+			})(moduleName);
 		}
 	}
 
