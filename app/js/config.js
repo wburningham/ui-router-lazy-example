@@ -12,11 +12,11 @@ require.config({
         angular: '../lib/angular/angular',        
         angularResource: '../lib/angular-resource/angular-resource',
         angularSanitize: '../lib/angular-sanitize/angular-sanitize.min',
-        angularUiRouter: '../lib/angular-ui-router/angular-ui-router',
+        angularUiRouter: '../lib/angular-ui-router/release/angular-ui-router',
         d3: '../lib/d3/d3',
         async: '../lib/requirejs-plugins/src/async',        
         jquery: '../lib/jquery/jquery.min',
-        lodash: '../lib/lodash/lodash.min',
+        lodash: '../lib/lodash/dist/lodash.min',
         ocLazyLoad: '../lib/ocLazyLoad/ocLazyLoad.min',
         uiRouterExtras: '../lib/ui-router-extras/ct-ui-router-extras',
         uiRouterExtrasStatevis: '../lib/ui-router-extras-statevis/statevis'

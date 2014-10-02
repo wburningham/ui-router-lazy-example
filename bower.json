@@ -17,6 +17,7 @@
     "angular": "~1.2.25",
     "angular-resource": "~1.2.25",
     "angular-sanitize": "~1.2.25",
-    "angular-ui-router": "~0.2.11"
+    "angular-ui-router": "~0.2.11",
+    "lodash": "~2.4.1"
   }
 }

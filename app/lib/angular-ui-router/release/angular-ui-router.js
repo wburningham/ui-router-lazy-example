@@ -1,6 +1,6 @@
 /**
  * State-based routing for AngularJS
- * @version v0.2.10-dev-2014-07-25
+ * @version v0.2.11
  * @link http://angular-ui.github.com/
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
@@ -346,6 +346,7 @@ function $Resolve(  $q,    $injector) {
           if (!merged) merge(values, parent.$$values); 
           result.$$values = values;
           result.$$promises = true; // keep for isResolve()
+          delete result.$$inheritedValues;
           resolution.resolve(values);
         }
       }
@@ -361,12 +362,20 @@ function $Resolve(  $q,    $injector) {
         return result;
       }
       
+      if (parent.$$inheritedValues) {
+        merge(values, parent.$$inheritedValues);
+      }
+
       // Merge parent values if the parent has already resolved, or merge
       // parent promises and wait if the parent resolve is still in progress.
       if (parent.$$values) {
         merged = merge(values, parent.$$values);
+        result.$$inheritedValues = parent.$$values;
         done();
       } else {
+        if (parent.$$inheritedValues) {
+          result.$$inheritedValues = parent.$$inheritedValues;
+        }        
         extend(promises, parent.$$promises);
         parent.then(done, fail);
       }
@@ -646,7 +655,7 @@ angular.module('ui.router.util').service('$templateFactory', $TemplateFactory);
  *   URL matching this matcher (i.e. any string for which {@link ui.router.util.type:UrlMatcher#methods_exec exec()} returns
  *   non-null) will start with this prefix.
  *
- * @property {string} source  The pattern that was passed into the contructor
+ * @property {string} source  The pattern that was passed into the constructor
  *
  * @property {string} sourcePath  The path portion of the source property
  *
@@ -1635,7 +1644,7 @@ function $UrlRouterProvider(   $locationProvider,   $urlMatcherFactory) {
        *
        * @example
        * <pre>
-       * angular.module('app', ['ui.router']);
+       * angular.module('app', ['ui.router'])
        *   .run(function($rootScope, $urlRouter) {
        *     $rootScope.$on('$locationChangeSuccess', function(evt) {
        *       // Halt state change from even starting
@@ -1704,7 +1713,7 @@ function $UrlRouterProvider(   $locationProvider,   $urlMatcherFactory) {
         var url = urlMatcher.format(params);
         options = options || {};
 
-        if (!isHtml5 && url) {
+        if (!isHtml5 && url !== null) {
           url = "#" + $locationProvider.hashPrefix() + url;
         }
         url = appendBasePath(url, isHtml5, options.absolute);
@@ -2043,11 +2052,11 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
    * <pre>
    * // Override the internal 'views' builder with a function that takes the state
    * // definition, and a reference to the internal function being overridden:
-   * $stateProvider.decorator('views', function ($state, parent) {
+   * $stateProvider.decorator('views', function (state, parent) {
    *   var result = {},
    *       views = parent(state);
    *
-   *   angular.forEach(view, function (config, name) {
+   *   angular.forEach(views, function (config, name) {
    *     var autoName = (state.name + '.' + name).replace('.', '/');
    *     config.templateUrl = config.templateUrl || '/partials/' + autoName + '.html';
    *     result[name] = config;
@@ -2817,7 +2826,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
      * - **`lossy`** - {boolean=true} -  If true, and if there is no url associated with the state provided in the
      *    first parameter, then the constructed href url will be built from the first navigable ancestor (aka
      *    ancestor with a valid url).
-     * - **`inherit`** - {boolean=false}, If `true` will inherit url parameters from current url.
+     * - **`inherit`** - {boolean=true}, If `true` will inherit url parameters from current url.
      * - **`relative`** - {object=$state.$current}, When transitioning with relative path (e.g '^'), 
      *    defines which state to be relative from.
      * - **`absolute`** - {boolean=false},  If true will generate an absolute url, e.g. "http://www.example.com/fullurl".
@@ -2827,7 +2836,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
     $state.href = function href(stateOrName, params, options) {
       options = extend({
         lossy:    true,
-        inherit:  false,
+        inherit:  true,
         absolute: false,
         relative: $state.$current
       }, options || {});
@@ -3254,11 +3263,13 @@ function $ViewDirective(   $state,   $injector,   $uiViewScroll) {
         }
 
         function updateView(firstTime) {
-          var newScope        = scope.$new(),
-              name            = currentEl && currentEl.data('$uiViewName'),
+          var newScope,
+              name            = getUiViewName(attrs, $element.inheritedData('$uiView')),
               previousLocals  = name && $state.$current && $state.$current.locals[name];
 
           if (!firstTime && previousLocals === latestLocals) return; // nothing to do
+          newScope = scope.$new();
+          latestLocals = $state.$current.locals[name];
 
           var clone = $transclude(newScope, function(clone) {
             renderer.enter(clone, $element, function onUiViewEnter() {
@@ -3268,8 +3279,6 @@ function $ViewDirective(   $state,   $injector,   $uiViewScroll) {
             });
             cleanupLastView();
           });
-
-          latestLocals = $state.$current.locals[clone.data('$uiViewName')];
 
           currentEl = clone;
           currentScope = newScope;
@@ -3301,16 +3310,8 @@ function $ViewDirectiveFill ($compile, $controller, $state) {
     compile: function (tElement) {
       var initial = tElement.html();
       return function (scope, $element, attrs) {
-        var name      = attrs.uiView || attrs.name || '',
-            inherited = $element.inheritedData('$uiView');
-
-        if (name.indexOf('@') < 0) {
-          name = name + '@' + (inherited ? inherited.state.name : '');
-        }
-
-        $element.data('$uiViewName', name);
-
         var current = $state.$current,
+            name = getUiViewName(attrs, $element.inheritedData('$uiView')),
             locals  = current && current.locals[name];
 
         if (! locals) {
@@ -3336,6 +3337,15 @@ function $ViewDirectiveFill ($compile, $controller, $state) {
       };
     }
   };
+}
+
+/**
+ * Shared ui-view code for both directives:
+ * Given attributes and inherited $uiView data, return the view's name
+ */
+function getUiViewName(attrs, inherited) {
+  var name = attrs.uiView || attrs.name || '';
+  return name.indexOf('@') >= 0 ?  name :  (name + '@' + (inherited ? inherited.state.name : ''));
 }
 
 angular.module('ui.router.state').directive('uiView', $ViewDirective);
@@ -3451,7 +3461,7 @@ function $StateRefDirective($state, $timeout) {
         if (activeDirective) {
           activeDirective.$$setStateInfo(ref.state, params);
         }
-        if (!newHref) {
+        if (newHref === null) {
           nav = false;
           return false;
         }
@@ -3618,13 +3628,11 @@ angular.module('ui.router.state')
  *
  * @description
  * Translates to {@link ui.router.state.$state#methods_is $state.is("stateName")}.
- *
- * @param {Object} The params object
  */
 $IsStateFilter.$inject = ['$state'];
 function $IsStateFilter($state) {
-  return function(state, params) {
-    return $state.is(state, params);
+  return function(state) {
+    return $state.is(state);
   };
 }
 
@@ -3636,13 +3644,11 @@ function $IsStateFilter($state) {
  *
  * @description
  * Translates to {@link ui.router.state.$state#methods_includes $state.includes('fullOrPartialStateName')}.
- *
- * @param {Object} The params object
  */
 $IncludedByStateFilter.$inject = ['$state'];
 function $IncludedByStateFilter($state) {
-  return function(state, params) {
-    return $state.includes(state, params);
+  return function(state) {
+    return $state.includes(state);
   };
 }
 
