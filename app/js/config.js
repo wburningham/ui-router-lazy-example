@@ -18,7 +18,7 @@ require.config({
         jquery: '../lib/jquery/dist/jquery.min',
         lodash: '../lib/lodash/dist/lodash.min',
         ocLazyLoad: '../lib/ocLazyLoad/ocLazyLoad.min',
-        uiRouterExtras: '../lib/ui-router-extras/ct-ui-router-extras',
+        uiRouterExtras: '../lib/ui-router-extras/release/ct-ui-router-extras',
         uiRouterExtrasStatevis: '../lib/ui-router-extras-statevis/statevis'
     },
 
