@@ -9,17 +9,17 @@ require.config({
     //urlArgs: '_=' + (new Date()).getTime(),
 
     paths: {
-        bootstrap: '../lib/bootstrap/dist/js/bootstrap.min',        
-        angular: '../lib/angular/angular',        
-        angularResource: '../lib/angular-resource/angular-resource',
-        angularSanitize: '../lib/angular-sanitize/angular-sanitize.min',
-        angularUiRouter: '../lib/angular-ui-router/release/angular-ui-router',
-        d3: '../lib/d3/d3',
-        async: '../lib/requirejs-plugins/src/async',        
-        jquery: '../lib/jquery/dist/jquery.min',
-        lodash: '../lib/lodash/dist/lodash.min',
-        ocLazyLoad: '../lib/ocLazyLoad/dist/ocLazyLoad.min',
-        uiRouterExtras: '../lib/ui-router-extras/release/ct-ui-router-extras',
+        bootstrap: '/static/lib/bootstrap/dist/js/bootstrap.min',        
+        angular: '/static/lib/angular/angular',        
+        angularResource: '/static/lib/angular-resource/angular-resource',
+        angularSanitize: '/static/lib/angular-sanitize/angular-sanitize.min',
+        angularUiRouter: '/static/lib/angular-ui-router/release/angular-ui-router',
+        d3: '/static/lib/d3/d3',
+        async: '/static/lib/requirejs-plugins/src/async',        
+        jquery: '/static/lib/jquery/dist/jquery.min',
+        lodash: '/static/lib/lodash/dist/lodash.min',
+        ocLazyLoad: '/static/lib/ocLazyLoad/dist/ocLazyLoad.min',
+        uiRouterExtras: '/static/lib/ui-router-extras/release/ct-ui-router-extras',
         uiRouterExtrasStatevis: './ui-router-extras-statevis'
     },
 

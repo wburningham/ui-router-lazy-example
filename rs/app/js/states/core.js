@@ -21,11 +21,11 @@ define([
         $stateProvider
             .state('rs', {
                 abstract: true,
-                templateUrl: '/views/core/rs.html',
+                templateUrl: '/static/views/core/rs.html',
             })
             .state('rs.home', {
                 url: '/',
-                templateUrl: '/views/core/home.html',
+                templateUrl: '/static/views/core/home.html',
                 controller: 'HomeCtrl'                
             });         
         }

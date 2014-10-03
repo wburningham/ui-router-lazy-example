@@ -45,6 +45,10 @@ define([
                        reconfig: true,
                        name: 'rs.states.apple',
                        files: ['states/apple']
+                   // , {
+                   //     reconfig: true,
+                   //     name: 'rs.states.panels',
+                   //     files: ['states/panels']
                    }]
                });
 
@@ -88,6 +92,12 @@ define([
                                    'type': 'ocLazyLoad',
                                    'module': 'rs.states.apple'
                                });
+                               // $futureStateProvider.futureState({
+                               //     'stateName': 'rs.panels',
+                               //     'urlPrefix': '/panels',
+                               //     'type': 'ocLazyLoad',
+                               //     'module': 'rs.states.panels'
+                               // });
                            // }
                        }
                    );

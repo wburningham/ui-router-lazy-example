@@ -23,7 +23,7 @@ define([
         $stateProvider            
             .state('rs.distributions', {
                 url: '/distributions',
-                templateUrl: '/views/distributions/base.html',
+                templateUrl: '/static/views/distributions/base.html',
                 controller: 'distributions.BaseCtrl'                
             });            
         }
