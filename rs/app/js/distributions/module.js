@@ -8,5 +8,5 @@ define([
 
     'use strict';
 
-    return angular.module('rs.orange', ['ngSanitize', 'ngResource']);
+    return angular.module('rs.distributions', ['ngSanitize', 'ngResource']);
 });

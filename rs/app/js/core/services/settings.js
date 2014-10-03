@@ -8,7 +8,7 @@ define([
 
     coreModule.provider('SettingsService', function () {
 
-        var applesOrOranges = 'apples';
+        var applesOrdistributionss = 'apples';
 
         return {
             $get: function() {
@@ -17,7 +17,7 @@ define([
 
             fruit: ['$q', function ($q) {
                 var deferred = $q.defer();
-                deferred.resolve(applesOrOranges);
+                deferred.resolve(applesOrdistributionss);
                 return deferred.promise;
             }]
         };

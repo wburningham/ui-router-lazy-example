@@ -1,16 +1,16 @@
 define([
 
     'angularUiRouter',
-    'orange/module',
-    'orange/controllers/base',    
+    'distributions/module',
+    'distributions/controllers/base',    
 
 ], function() {
 
     'use strict';
 
-    angular.module('rs.states.orange', [
+    angular.module('rs.states.distributions', [
         'ui.router',        
-        'rs.orange'
+        'rs.distributions'
     ]).config([
             '$stateProvider',
             '$urlRouterProvider',
@@ -21,10 +21,10 @@ define([
                 ) {
 
         $stateProvider            
-            .state('app.orange', {
-                url: '/orange',
-                templateUrl: '/views/orange/base.html',
-                controller: 'Orange.BaseCtrl'                
+            .state('rs.distributions', {
+                url: '/distributions',
+                templateUrl: '/views/distributions/base.html',
+                controller: 'distributions.BaseCtrl'                
             });            
         }
     ]);

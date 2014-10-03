@@ -19,11 +19,11 @@ define([
                 ) {
 
         $stateProvider
-            .state('app', {
+            .state('rs', {
                 abstract: true,
-                template: '<ui-view/>'
+                templateUrl: '/views/core/rs.html',
             })
-            .state('app.home', {
+            .state('rs.home', {
                 url: '/',
                 templateUrl: '/views/core/home.html',
                 controller: 'HomeCtrl'                

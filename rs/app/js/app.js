@@ -39,8 +39,8 @@ define([
                    loadedModules: ['rs'],
                    modules: [{
                        reconfig: true,
-                       name: 'rs.states.orange',
-                       files: ['states/orange']
+                       name: 'rs.states.distributions',
+                       files: ['states/distributions']
                    }, {
                        reconfig: true,
                        name: 'rs.states.apple',
@@ -64,7 +64,7 @@ define([
                    /**
                     * NOTE: resolves can be used for determining
                     * which future states you actually want.
-                    * Here, we register both apples and oranges.
+                    * Here, we register both apples and distributionss.
                     * Try uncommenting the if/else to see
                     * the magic of provider injected logic
                     *
@@ -74,16 +74,16 @@ define([
                     */
                    return $injector.invoke(SettingsServiceProvider.fruit).then(
                        function (fruitResult) {
-                           // if (fruitResult === 'oranges') {
+                           // if (fruitResult === 'distributionss') {
                                $futureStateProvider.futureState({
-                                   'stateName': 'app.orange',
-                                   'urlPrefix': '/orange',
+                                   'stateName': 'rs.distributions',
+                                   'urlPrefix': '/distributions',
                                    'type': 'ocLazyLoad',
-                                   'module': 'rs.states.orange'
+                                   'module': 'rs.states.distributions'
                                });
                            // } else if (fruitResult === 'apples') {
                                $futureStateProvider.futureState({
-                                   'stateName': 'app.apple',
+                                   'stateName': 'rs.apple',
                                    'urlPrefix': '/apple',
                                    'type': 'ocLazyLoad',
                                    'module': 'rs.states.apple'

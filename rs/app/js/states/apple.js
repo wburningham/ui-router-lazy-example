@@ -21,7 +21,7 @@ define([
                 ) {
 
         $stateProvider            
-            .state('app.apple', {
+            .state('rs.apple', {
                 url: '/apple',
                 templateUrl: '/views/apple/base.html',
                 controller: 'Apple.BaseCtrl'                
