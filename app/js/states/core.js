@@ -25,7 +25,7 @@ define([
             })
             .state('app.home', {
                 url: '/',
-                templateUrl: 'views/core/home.html',
+                templateUrl: '/views/core/home.html',
                 controller: 'HomeCtrl'                
             });         
         }

@@ -23,7 +23,7 @@ define([
         $stateProvider            
             .state('app.orange', {
                 url: '/orange',
-                templateUrl: 'views/orange/base.html',
+                templateUrl: '/views/orange/base.html',
                 controller: 'Orange.BaseCtrl'                
             });            
         }

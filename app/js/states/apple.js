@@ -23,7 +23,7 @@ define([
         $stateProvider            
             .state('app.apple', {
                 url: '/apple',
-                templateUrl: 'views/apple/base.html',
+                templateUrl: '/views/apple/base.html',
                 controller: 'Apple.BaseCtrl'                
             });        
         }

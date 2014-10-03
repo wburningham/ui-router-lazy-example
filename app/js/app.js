@@ -23,14 +23,14 @@ define([
         ]).config([
            '$ocLazyLoadProvider',
            '$futureStateProvider',
-           // '$locationProvider',
+           '$locationProvider',
            'SettingsServiceProvider',           
            function($ocLazyLoadProvider,
                     $futureStateProvider,
-                    // $locationProvider,
+                    $locationProvider,
                     SettingsServiceProvider) {
 
-              // $locationProvider.html5Mode(true);
+              $locationProvider.html5Mode(true);
 
                $ocLazyLoadProvider.config ({
                    debug: true,
